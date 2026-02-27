@@ -4,11 +4,11 @@ Polaris is (will be) an online Chinese Checkers platform!
 
 You can find the frontend here:
 
-[github.com/bdsriver/ChineseCheckers]
+<github.com/bdsriver/ChineseCheckers>
 
 and the engine here:
 
-[github.com/bdsriver/Chinese_Checkers_Engine]
+<github.com/bdsriver/Chinese_Checkers_Engine>
 
 
 # Installation
