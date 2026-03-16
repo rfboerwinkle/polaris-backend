@@ -13,6 +13,18 @@ and the engine here:
 
 # Installation
 
-`requirements.txt` has a list of required debian packages (which map pretty much 1-to-1 to python packages).
+`requirements.txt` has a list of required python packages.
+
+Then, you can run the main server:
+
+`./run.sh`
+
+Additionally, you will have to serve the frontend pages yourself. One good option is Apache's `httpd`:
+
+<https://httpd.apache.org/>
+
+# Other Information
+
+A technical description of the architecture is described in `architecture.md`.
 
 Happy Checkering!
