@@ -44,7 +44,7 @@ The server-side engine communicates with the central application server via POSI
 
 # Database
 
-The database is runs on Oracle Database. It stores user data and game history. The schema can be found in the backend repository, in the file **TODO**.
+The database runs on MySQL 8. It stores user data and game history. Details (how to run it, schema, seed, connection) are in the backend repository in `db.md`; the schema and seed live in `db/schema.sql` and `db/seed.sql`.
 
 ## Links
 
@@ -60,4 +60,4 @@ The server communicates with the client via websockets to send and receive event
 
 The server communicates with the engine via POSIX pipes. The specifics can be found in **TODO**.
 
-The server communicates with the database via SQL. The schema can me found in the backend repository, in the file **TODO**.
+The server communicates with the database via SQL. See `db.md` in the backend repository for schema and connection details.
