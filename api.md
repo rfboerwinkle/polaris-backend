@@ -27,7 +27,7 @@ The meaning of the code field is enumerated here:
 |    7 | Invalid move.                                  |
 |    8 | Not your turn.                                 |
 
-Some message will have additional return values in this message (like returning a game code upon game creation).
+Some message will have additional return values in this ack message (like returning a game code upon game creation).
 
 # Client Messages
 
@@ -85,7 +85,7 @@ Additional return fields:
 ```
 {
   ...,
-  "code":<int>, /* Game code, to be used in "game_join". */
+  "game_code":<int>, /* Game code, to be used in "game_join". */
 }
 ```
 

@@ -1,46 +1,68 @@
-import os
+import asyncio
+from json import dumps,loads
 
-from flask import Flask
-from flask import make_response
+from websockets.asyncio.server import serve
 
-# Really, we shouldn't serve these static files ourselves, but for right now it's okay.
+import api
 
-# These should be in an env file eventually.
-FRONTEND_DIR = "/home/robert/dist/"
+# TODO: handle api requests that result in broadcasted messages
 
-# These variables are generated once here, but then const.
-SERVABLE = {}
-for dirpath, dirnames, filenames in os.walk(FRONTEND_DIR):
-    for file in filenames:
-        filepath = os.path.join(dirpath, file)
-        with open(filepath, "rb") as f:
-            SERVABLE[tuple(os.path.relpath(filepath, FRONTEND_DIR).split(os.sep))] = f.read()
-
-app = Flask(__name__)
-
-@app.route("/")
-def cludge():
-    return puppet_master("")
-
-@app.route("/<path:subpath>")
-def puppet_master(subpath):
-    p = tuple(subpath.strip("/").split("/"))
-    if p not in SERVABLE:
-        p = ("ChineseCheckers", "index.html",)
-
-    resp = make_response(SERVABLE[p], 200)
-    mime = lookup_mime(p[-1])
-    resp.headers["Content-Type"] = mime
-
-    return resp
-
-def lookup_mime(file):
-    ext = file.split(".")[-1]
-    if ext == "css":
-        return "text/css"
-    elif ext == "js":
-        return "text/javascript"
-    elif ext == "wasm":
-        return "application/wasm"
+# returns a dictionary with type, id, code, and any other necessary info.
+# done outside of handler function to not worry about asyncio stuff.
+def handle_message(message):
+    # assuming messages are sent/recieved in JSON format
+    ret = {"type":"ack", "id":0, "code":-1}
+    try:
+        event = loads(message)
+    except:
+        ret["code"] = 2
+        return ret
+    # ensure id is an int
+    if type(event["id"]) != int:
+        ret["code"] = 2
+        ret["id"] = 0
+        return ret
     else:
-        return "text/html"
+        ret["id"] = event["id"]
+
+    # the JSON object will be passed into all api.py functions
+    # api func should return a dictionary including code, NOT type or id
+    # TODO: Server messages?
+    try:
+        if event["type"] == "signup":
+            ret.update(api.signup(event))
+        elif event["type"] == "login":
+            ret.update(api.login(event))
+        elif event["type"] == "game_request":
+            ret.update(api.game_request(event))
+        elif event["type"] == "game_create":
+            ret.update(api.game_create(event))
+        elif event["type"] == "game_join":
+            ret.update(api.game_join(event))
+        elif event["type"] == "game_modify":
+            ret.update(api.game_modify(event))
+        elif event["type"] == "move":
+            ret.update(api.move(event))
+        else:
+            ret["code"] = 2
+    finally:
+        return ret
+
+
+async def handler(websocket):
+    async for message in websocket:
+        # print("incoming: " + str(message))
+        outgoing = handle_message(message)
+        # print("outgoing: " + str(outgoing))
+        await websocket.send(dumps(outgoing))
+
+
+
+async def main():
+    # maybe change the port number?
+    async with serve(handler, "", 2122) as server:
+        await server.serve_forever()
+
+
+if __name__ == "__main__":
+    asyncio.run(main())
