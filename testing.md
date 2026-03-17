@@ -2,7 +2,7 @@ This document is a draft that briefly outlines the testing that will occur acros
 
 # Component Testing
 
-Unit testing will be mainly used for testing individual components of our project, especially on backend (such as testing API functions)
+Unit testing will be mainly used for testing individual components of our project, especially on backend (such as testing API functions).
 
 # Integration Testing
 
@@ -10,7 +10,7 @@ Integration testing will be used to ensure proper behavior between backend and d
 
 # Performance Testing
 
-Since the application is aimed to have numerous concurrent users connected and playing, some performance testing on the websocket and other resources that digitally within our control will be done to ensure smooth and timely responses to users
+Since the application is aimed to have numerous concurrent users connected and playing, some performance testing on the websocket and other resources that digitally within our control will be done to ensure smooth and timely responses to users.
 
 # Testing via Simulation
 
