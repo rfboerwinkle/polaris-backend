@@ -1,13 +1,3 @@
-# NOTES ON THE TODOS
-
-I don't know how you guys wanto to handle communication between the client and the client-side engine, or if it's even worth mentioning.
-
-I don't know what format the engine messages are in, ben, if you could write that up and put it somewhere I would appreciate it.
-
-I don't know what format the schema should be in. SQL, I presume, but I don't know the specifics of oracle. The last project I worked on used SQLite, where we had a schema file (consisting of plain SQL) which the installation process created a new database with. In that case, the schema is in a human-readable-enough format, and it can be linked to here.
-
-Dr. Song says he wants a "design spec", a "requirements spec", and a "testing spec". I think the design and requirement specs are supposed to be kind of like 'user experience / end result of the application' and 'inner workings / architecture of the system', respectively. This is somewhat intended to be the requirements spec. I don't know what format he wants it in though. I would like to just link him to this file. If he wants a pdf though, we may have to put it through some 'markdown to pdf' converter, and add the other files (`api.md`, db schema, etc.) as appendices.
-
 # About
 
 This file describes each component of the system, and how they communicate.
@@ -30,7 +20,7 @@ The client is served by the HTTP server.
 
 The client communicates with the central application server via websockets to send and receive events. The specifics can be found in the backend repository, in the file `api.md`.
 
-The client communicates with the client-side engine via **TODO**.
+The client communicates with the client-side engine via web assembly import.
 
 # Engine
 
@@ -38,9 +28,9 @@ The engine is implemented in the engine repository. It is implemented in c++, an
 
 ## Links
 
-The client-side engine communicates with the client via **TODO**.
+The client-side engine communicates with the client via web assembly import.
 
-The server-side engine communicates with the central application server via POSIX pipes. The specifics can be found in **TODO**.
+The server-side engine communicates with the central application server via POSIX pipes. The specifics can be found in the backend repository, in the file `engine.md`.
 
 # Database
 
@@ -58,6 +48,6 @@ The central application server (or just "the server") is implemented in the back
 
 The server communicates with the client via websockets to send and receive events. The specifics can be found in the backend repository, in the file `api.md`.
 
-The server communicates with the engine via POSIX pipes. The specifics can be found in **TODO**.
+The server communicates with the engine via POSIX pipes. The specifics can be found in the backend repository, in the file `engine.md`.
 
 The server communicates with the database via SQL. See `db.md` in the backend repository for schema and connection details.
