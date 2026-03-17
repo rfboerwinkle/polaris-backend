@@ -5,8 +5,8 @@
 # Accounts
 
 - Have username and password
-- No password reset
-- Only setting attached to an account is checkbox for opting into data collection
+- History of played games available to be viewed
+- Checkbox for opting into data collection
 
 # Single Player Games
 
@@ -29,3 +29,4 @@
 
 - Require accounts to join
 - Randomly assign with someone else in the queue
+- Ranked with a modified ELO
