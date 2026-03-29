@@ -6,7 +6,7 @@
 
 - Have username and password
 - History of played games available to be viewed
-- Checkbox for opting into data collection
+- Disclosure of data collection to the user
 
 # Single Player Games
 
