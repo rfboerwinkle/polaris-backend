@@ -57,7 +57,7 @@ def valid_move(piece_locations: dict[int, list[int]],
         
         #check if the end space is already occupied 
         for id, locations in piece_locations.items():
-            if start_space in locations:
+            if start_space in locations and id != playerID:
                 return False
         
         if end_space in moves[start_space]:
