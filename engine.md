@@ -79,8 +79,58 @@ If there was an error in the input, the program will not crash. It will output:
 ```
 <error message>
 ```
-For example, it will say if the input had multiple pieces on the same spot or if the amount of players the same started with doesn't make sense.
+For example, it will say if the input had multiple pieces on the same spot or if the amount of players the game started with doesn't make sense.
 
 # Frontend Engine
-TBD, it will have defined member functions of the engine wasm object instead of CLI. 
-Expect a a similar interface as the backend using arrays instead of separator characters.
+
+The frontend engine takes the position as input and outputs the optimal move. Note that it only does this and does not manage the game state.
+
+## Input
+
+The ```engineObject.search()`` method will be called for finding the best move. This is the format for calling the function, where all parameters are required:
+
+```search(depth, startPlayerAmount, currPlayerTurn, position)```
+
+**Depth:** The depth of the search. The "bot types" aren't implemented yet so this will change to be called "Difficulty" and be a string but currently it is just a positive integer.
+
+**Start Player Amount:** Same as the backend. How many players the game started with (2,3,4, or 6).
+
+**Current Player Turn:** Same as the backend. Whose turn it is to move (0-5). Player 0 always moves first, followed by player 1 and so on.
+
+**Position:** This is a 2D Javascript array. The idea is similar to the backend position representation but it is resresented by nested arrays. 
+
+Each sub-array represents the piece locations of one player. The sub-array is 11 integers. The first number is the player id (0-5). The next 10 numbers are the 10 piece locations for the player. Here is a sub-array for player 0 at the beginning:
+``` [0, 0, 1, 2, 3, 4, 5, 6, 7, 8, 9]```
+
+There should be one sub-array for each player who still has pieces on the board and players who do not have pieces on the board should not have any sub-array. The order or piece locations or arrays does not matter. Here is the start position array for 6 players:
+
+```
+[
+  [0, 0, 1, 2, 3, 4, 5, 6, 7, 8, 9],
+  [1, 19, 20, 21, 22, 32, 33, 34, 44, 45, 55],
+  [2, 74, 84, 85, 95, 96, 97, 107, 108, 109, 110],
+  [3, 111, 112, 113, 114, 115, 116, 117, 118, 119, 120],
+  [4, 65, 75, 76, 86, 87, 88, 98, 99, 100, 101],
+  [5, 10, 11, 12, 13, 23, 24, 25, 35, 36, 46]
+]
+```
+
+**Errors:** There isn't any input validation currently so it will likely output an error in the console or say the move is ```(0,0)```.
+
+## Output
+
+Note that unlike the backend, the frontend engine outputs the move instead of the new position. This can be changed in the future.
+
+The output is a Javascript array returned from the ```search()`` function defined as follows:
+
+```[movefrom, moveto, jumpAmount, jumpSpace1, jumpSpace2 ...  jumpSpaceLast]```
+
+**Move From:** This is the space the piece that moved started on.
+
+**Move To:** This is the space the piece that moved ended on.
+
+**Jump Amount:** This is the amount of jumps the piece had to do to finish the move, +1. If it only moved to an adjacent space, this will equal 2. If it's less than 2 there was an error somewhere, let me know. This happens sometimes
+
+**Jump Spaces:** This is (jumpAmount) integers. The first integer is the space it started and the last one is the space it ended on. The rest are the intermediary spaces it jumped to, in order.
+
+**Errors:** I have noticed some errors since changing the engine to this format, please send me any problems.
