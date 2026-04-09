@@ -76,7 +76,6 @@ Create a private game.
 {
   "type":"game_create",
   "id":<int>,
-  /* Put some options here eventually */
 }
 ```
 
@@ -103,13 +102,16 @@ Join a private game.
 
 ## game_modify
 
-Modify an existing game, mostly for settings like player count.
+Modify an existing game before it starts, mostly for settings like player count.
 
 ```
 {
   "type:"game_modify",
   "id":<int>,
-  /* Put some settings here */
+  /* Where the keys are 0-5, and the values are player usernames. */
+  /* Bots can be added/removed at any time based on their unique name. */
+  "seat": {<int>: <str>, ...},
+  "has_started": <bool>,
 }
 ```
 
@@ -121,7 +123,9 @@ Make a move.
 {
   "type:"move",
   "id":<int>,
-  /* However we want to represent moves. */
+  "start":[<int>, <int>],
+  "end":[<int>, <int>],
+  "resign":<bool>,
 }
 ```
 
@@ -135,6 +139,38 @@ Inform a client of a change in game state.
 {
   "type:"game_state",
   "id":<int>,
-  "state": /* However we want to represent state. */
+  "board":{<int>: [[<int>, <int>], * 10], ...},
+  "turn":<int>,
+}
+```
+
+## game_settings
+
+Notification of a `game_modify` message.
+
+```
+{
+  "type:"game_settings",
+  "id":<int>,
+  /* Where the keys are the seats of the players [0,5], and the values are player usernames. */\
+  /* Bots can be added/removed at any time based on their unique name. */
+  "seat":{<int>: <str>, ...},
+  "has_started":<bool>,
+}
+```
+
+## game_results
+
+Inform a client of a game ending.
+
+```
+{
+  "type:"game_results",
+  "id":<int>,
+  /* Index 0 of this list is the seat of the player who got first place, etc. */
+  "placement":[<int>, ...],
+  /* The keys are usernames, the values are their change in elo. */
+  /* For unranked games, set all of these to 0. */
+  "rank_change":{<str>:<int>, ...}
 }
 ```
