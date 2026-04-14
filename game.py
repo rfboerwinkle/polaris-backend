@@ -6,6 +6,11 @@
 # just here to start laying out the Game and Player classes. I will need to use
 # them in the interface with the engine.
 
+import sys
+import asyncio
+
+stdio_lock = asyncio.Lock()
+
 class Player:
     def __init__(self, name:str, is_bot:bool) -> None:
         self.name = name
@@ -64,9 +69,29 @@ class Game:
         # To prevent infinite loops.
         for i in range(7):
             if i == 6:
-                print("too many loops of turn updating")
+                print("too many loops of turn updating", file=sys.stderr)
                 break
             if self.turn in self.cur_players:
                 break
             self.turn += 1
             self.turn %= 6
+
+    def engine_move(self) -> None:
+        moving_player = self.player_list[self.turn]
+        # Coming up next is a monster of a line, so here is equivalent code for
+        # your viewing pleasure:
+        # ```
+        # pieces = ""
+        # for i in self.cur_players:
+        #     pieces += str(i) + " "
+        #     pieces += " ".join(str(pos) for pos in self.pieces[i])
+        #     pieces += " "
+        # pieces = pieces[:-1]
+        # ```
+        pieces = " ".join(str(i) + " " + " ".join(str(pos) for pos in self.pieces[i]) for i in self.cur_players)
+        test_string = f"{moving_player} {self.original_count} {len(self.cur_players)} {self.turn} {pieces}"
+        print(f"sending: \"{test_strin}\"", file=sys.stderr)
+        with stdio_lock:
+            print(test_string, flush=True)
+            out_string = input()
+        print(f"got: \"{out_string}\"", file=sys.stderr)
