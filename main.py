@@ -9,19 +9,20 @@ import api
 
 # returns a dictionary with type, id, code, and any other necessary info.
 # done outside of handler function to not worry about asyncio stuff.
-def handle_message(message):
+def handle_message(message, logged_in_user):
     # assuming messages are sent/recieved in JSON format
     ret = {"type":"ack", "id":0, "code":-1}
     try:
         event = loads(message)
     except:
         ret["code"] = 2
-        return ret
+        return ret,logged_in_user
+    
     # ensure id is an int
     if type(event["id"]) != int:
         ret["code"] = 2
         ret["id"] = 0
-        return ret
+        return ret,logged_in_user
     else:
         ret["id"] = event["id"]
 
@@ -32,13 +33,20 @@ def handle_message(message):
         if event["type"] == "signup":
             ret.update(api.signup(event))
         elif event["type"] == "login":
-            ret.update(api.login(event))
+            res = api.login(event)
+            ret.update(res)
+            if res["code"] == 0:
+                logged_in_user = event.get("name", "").strip()
         elif event["type"] == "game_request":
             ret.update(api.game_request(event))
         elif event["type"] == "game_create":
             ret.update(api.game_create(event))
         elif event["type"] == "game_join":
-            ret.update(api.game_join(event))
+            if logged_in_user is None:
+                ret["code"] = 3
+            else:
+                event["name"] = logged_in_user
+                ret.update(api.game_join(event))
         elif event["type"] == "game_modify":
             ret.update(api.game_modify(event))
         elif event["type"] == "move":
@@ -46,13 +54,14 @@ def handle_message(message):
         else:
             ret["code"] = 2
     finally:
-        return ret
+        return ret, logged_in_user
 
 
 async def handler(websocket):
+    logged_in_user = None
     async for message in websocket:
         # print("incoming: " + str(message))
-        outgoing = handle_message(message)
+        outgoing, logged_in_user = handle_message(message,logged_in_user)
         # print("outgoing: " + str(outgoing))
         await websocket.send(dumps(outgoing))
 
