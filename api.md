@@ -84,7 +84,7 @@ Additional return fields:
 ```
 {
   ...,
-  "game_code":<int>, /* Game code, to be used in "game_join". */
+  "game_code":<string>, /* Game code, to be used in "game_join". */
 }
 ```
 
@@ -110,7 +110,7 @@ Modify an existing game before it starts, mostly for settings like player count.
   "id":<int>,
   /* Where the keys are 0-5, and the values are player usernames. */
   /* Bots can be added/removed at any time based on their unique name. */
-  "seat": {<int>: <str>, ...},
+  "seat": {<int>: <string>, ...},
   "has_started": <bool>,
 }
 ```
@@ -123,8 +123,8 @@ Make a move.
 {
   "type:"move",
   "id":<int>,
-  "start":[<int>, <int>],
-  "end":[<int>, <int>],
+  "start":<int>,
+  "end":<int>,
   "resign":<bool>,
 }
 ```
@@ -139,7 +139,8 @@ Inform a client of a change in game state.
 {
   "type:"game_state",
   "id":<int>,
-  "board":{<int>: [[<int>, <int>], * 10], ...},
+  /* This is a dictionary mapping players to their pieces' positions. */
+  "board":{<int>: [<int>, * 10], ...},
   "turn":<int>,
 }
 ```
@@ -154,7 +155,7 @@ Notification of a `game_modify` message.
   "id":<int>,
   /* Where the keys are the seats of the players [0,5], and the values are player usernames. */\
   /* Bots can be added/removed at any time based on their unique name. */
-  "seat":{<int>: <str>, ...},
+  "seat":{<int>: <string>, ...},
   "has_started":<bool>,
 }
 ```
@@ -171,6 +172,6 @@ Inform a client of a game ending.
   "placement":[<int>, ...],
   /* The keys are usernames, the values are their change in elo. */
   /* For unranked games, set all of these to 0. */
-  "rank_change":{<str>:<int>, ...}
+  "rank_change":{<string>:<int>, ...}
 }
 ```
