@@ -7,9 +7,22 @@ import api
 
 # TODO: handle api requests that result in broadcasted messages
 
+async def matchmaking_loop():
+    """Periodically check for matches in ranked queue"""
+    while True:
+        try:
+            matched = await api.ranked_queue.try_match()
+            if matched:
+                print(f"Match found: {matched}")
+                game_code = api.create_ranked_game(matched)
+                print(f"Created ranked game: {game_code}")
+        except Exception as e:
+            print(f"Error in matchmaking loop: {e}")
+        await asyncio.sleep(2)  # Check every 2 seconds
+
 # returns a dictionary with type, id, code, and any other necessary info.
 # done outside of handler function to not worry about asyncio stuff.
-def handle_message(message, logged_in_user):
+async def handle_message(message, logged_in_user):
     # assuming messages are sent/recieved in JSON format
     ret = {"type":"ack", "id":0, "code":-1}
     try:
@@ -38,7 +51,11 @@ def handle_message(message, logged_in_user):
             if res["code"] == 0:
                 logged_in_user = event.get("name", "").strip()
         elif event["type"] == "game_request":
-            ret.update(api.game_request(event))
+            if logged_in_user is None:
+                ret["code"] = 3
+            else:
+                event["name"] = logged_in_user
+                ret.update(await api.game_request(event))
         elif event["type"] == "game_create":
             ret.update(api.game_create(event))
         elif event["type"] == "game_join":
@@ -61,7 +78,7 @@ async def handler(websocket):
     logged_in_user = None
     async for message in websocket:
         # print("incoming: " + str(message))
-        outgoing, logged_in_user = handle_message(message,logged_in_user)
+        outgoing, logged_in_user = await handle_message(message,logged_in_user)
         # print("outgoing: " + str(outgoing))
         await websocket.send(dumps(outgoing))
 
@@ -69,6 +86,7 @@ async def handler(websocket):
 
 async def main():
     # maybe change the port number?
+    matchmaking_task = asyncio.create_task(matchmaking_loop())
     async with serve(handler, "", 2122) as server:
         await server.serve_forever()
 
