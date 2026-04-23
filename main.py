@@ -7,8 +7,8 @@ import api
 
 # TODO: handle api requests that result in broadcasted messages
 
+# Periodically check for matchmaking for ranked queue
 async def matchmaking_loop():
-    """Periodically check for matches in ranked queue"""
     while True:
         try:
             matched = await api.ranked_queue.try_match()

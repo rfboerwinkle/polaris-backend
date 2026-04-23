@@ -209,8 +209,7 @@ def game_create(event):
     game_codes[code] = game_id
     return {"code": 0, "game_code": code}
 
-def create_ranked_game(matched_players: list[str]) -> str:
-    """Create a ranked game with the matched players already seated."""
+def create_ranked_game(matched_players):
     # Insert into database
     try:
         connection = _get_connection()

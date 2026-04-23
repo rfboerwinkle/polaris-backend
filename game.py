@@ -90,7 +90,7 @@ class Game:
         # ```
         pieces = " ".join(str(i) + " " + " ".join(str(pos) for pos in self.pieces[i]) for i in self.cur_players)
         test_string = f"{moving_player} {self.original_count} {len(self.cur_players)} {self.turn} {pieces}"
-        print(f"sending: \"{test_strin}\"", file=sys.stderr)
+        print(f"sending: \"{test_string}\"", file=sys.stderr)
         with stdio_lock:
             print(test_string, flush=True)
             out_string = input()

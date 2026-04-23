@@ -1,11 +1,5 @@
-from __future__ import annotations
 import asyncio
 import time
-from typing import Optional, TYPE_CHECKING
-
-if TYPE_CHECKING:
-    from api import QueuedPlayer
-
 
 class QueuedPlayer:
     def __init__(self, username: str, elo: int, join_time: float):
@@ -36,8 +30,8 @@ class RankedQueue:
             # Keep sorted by ELO for efficient matching
             self.queue.sort(key=lambda p: p.elo)
     
+    # remove if cancel queue, don't think this is implemented on frontend yet but just in case
     async def remove_player(self, username: str) -> bool:
-        """Remove player if they cancel queue. Returns True if found."""
         async with self.lock:
             for i, player in enumerate(self.queue):
                 if player.username == username:
@@ -45,11 +39,8 @@ class RankedQueue:
                     return True
         return False
     
+    # Phase determined by wait time, returns required players and elo range
     def _get_phase(self, wait_time: float) -> tuple[int, int]:
-        """
-        Determine phase based on wait time.
-        Returns (required_players, elo_range)
-        """
         elapsed = 0
         for required_players, elo_range, duration in self.phases:
             if duration is None or wait_time < elapsed + duration:
@@ -58,11 +49,8 @@ class RankedQueue:
         # Fallback to last phase
         return self.phases[-1][0], self.phases[-1][1]
     
-    async def try_match(self) -> Optional[list[str]]:
-        """
-        Try to form a match based on current queue state.
-        Returns list of matched usernames or None.
-        """
+    # Tries to match oldest player in queue, returns list of matched usernames
+    async def try_match(self) -> list[str] | None:
         async with self.lock:
             if not self.queue:
                 return None
