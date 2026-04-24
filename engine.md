@@ -22,7 +22,7 @@ The input format is as follows with different parameters separated by spaces:
 ```
 <difficulty/bot type> <original player amount> <Current player amount> <Current player turn> <piece positions as specified below>
 ```
-**Difficulty/Bot Type:** Currently this hasn't been implemented so just put anything here for now but it will be a string.
+**Difficulty/Bot Type:** String: "easy", "medium", or "hard". It defaults to easy difficulty if you pass in something that isn't one of these
 
 **Original Player Amount:** How many players the game started with (2,3,4, or 6).
 
