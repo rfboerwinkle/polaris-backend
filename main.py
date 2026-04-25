@@ -5,6 +5,16 @@ from websockets.asyncio.server import serve
 
 import api
 
+
+game_conns: dict[int, set] = {}
+def add_conn(game_id:int,websocket) -> None:
+    game_conns.setdefault(game_id, set()).add(websocket)
+
+def rem_conn(game_id:int,websocket) -> None:
+    if game_id in game_conns:
+        game_conns[game_id].discard(websocket)
+        if not game_conns[game_id]:
+            del game_conns[game_id]
 # TODO: handle api requests that result in broadcasted messages
 
 # Periodically check for matchmaking for ranked queue
@@ -22,7 +32,7 @@ async def matchmaking_loop():
 
 # returns a dictionary with type, id, code, and any other necessary info.
 # done outside of handler function to not worry about asyncio stuff.
-async def handle_message(message, logged_in_user):
+async def handle_message(message, logged_in_user,current_game_id=None,websocket=None):
     # assuming messages are sent/recieved in JSON format
     ret = {"type":"ack", "id":0, "code":-1}
     try:
@@ -45,43 +55,89 @@ async def handle_message(message, logged_in_user):
     try:
         if event["type"] == "signup":
             ret.update(api.signup(event))
+
+
         elif event["type"] == "login":
             res = api.login(event)
             ret.update(res)
             if res["code"] == 0:
                 logged_in_user = event.get("name", "").strip()
+        
+        
         elif event["type"] == "game_request":
             if logged_in_user is None:
                 ret["code"] = 3
             else:
                 event["name"] = logged_in_user
                 ret.update(await api.game_request(event))
+        
+        
         elif event["type"] == "game_create":
-            ret.update(api.game_create(event))
+            #Gharret: get game id 
+            if logged_in_user is None:
+                ret["code"] = 3
+            else:
+                res = api.game_create(event)
+                ret.update(res)
+                if res["code"] == 0:
+                    event["game_id"] = res["game_id"]
+                    add_conn(event["game_id"], websocket)
+        
+        
         elif event["type"] == "game_join":
+            #add game_id to pass so user
             if logged_in_user is None:
                 ret["code"] = 3
             else:
                 event["name"] = logged_in_user
                 ret.update(api.game_join(event))
+                if ret["code"] == 0:
+                    if current_game_id is not None:
+                        rem_conn(current_game_id, websocket)
+                    current_game_id = res["game_id"]
+                    add_conn(current_game_id, websocket)
+       
+       
         elif event["type"] == "game_modify":
-            ret.update(api.game_modify(event))
+            if logged_in_user is None:
+                ret["code"] = 3
+            elif current_game_id is None:
+                ret["code"] = 1
+            else:
+                event["name"] = logged_in_user
+                event["game_id"] = current_game_id
+                ret.update(await api.game_modify(event,game_conns))
+       
+       
         elif event["type"] == "move":
-            ret.update(api.move(event))
+            if logged_in_user is None:
+                ret["code"] = 3
+            elif current_game_id is None:
+                ret["code"] = 1
+            else:
+                event["name"] = logged_in_user
+                event["game_id"] = current_game_id
+                ret.update(await api.move(event,game_conns))
+        
         else:
             ret["code"] = 2
     finally:
-        return ret, logged_in_user
+        return ret, logged_in_user,current_game_id
 
 
 async def handler(websocket):
     logged_in_user = None
-    async for message in websocket:
-        # print("incoming: " + str(message))
-        outgoing, logged_in_user = await handle_message(message,logged_in_user)
-        # print("outgoing: " + str(outgoing))
-        await websocket.send(dumps(outgoing))
-
+    current_game_id = None
+    try:
+        async for message in websocket:
+            # print("incoming: " + str(message))
+            outgoing, logged_in_user, current_game_id = await handle_message(
+                            message, logged_in_user, current_game_id, websocket
+                        )            # print("outgoing: " + str(outgoing))
+            await websocket.send(dumps(outgoing))
+    finally:
+        if current_game_id is not None:
+            rem_conn(current_game_id, websocket)
 
 
 async def main():

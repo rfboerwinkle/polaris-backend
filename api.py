@@ -181,12 +181,12 @@ async def game_request(event):
 
 def game_create(event):
     #make random game code
-    code = random.randbits(32).hex()
+    code = format(random.getrandbits(32), 'x')
     #checks five times then if failed to generate a unique code, returns an error
     for _ in range(5):
         if code not in game_codes:
             break
-        code = random.randbits(32).hex()
+        code = format(random.getrandbits(32), 'x')
     else:
         return {"code": -1}
     
@@ -207,7 +207,7 @@ def game_create(event):
     empty_seats = [Player(name="", is_bot=False) for _ in range(6)]
     games[game_id] = {"game": Game(empty_seats), "code": code}
     game_codes[code] = game_id
-    return {"code": 0, "game_code": code}
+    return {"code": 0, "game_code": code,"game_id": game_id}
 
 def create_ranked_game(matched_players):
     # Insert into database
@@ -271,13 +271,111 @@ def game_join(event):
 
 
     
+#Gharret: 
+async def game_modify(event,connections):
+    username = event.get("name")
+    game_id = event.get("game_id")
 
-def game_modify(event):
-    pass
+    if not isinstance(username, str) or not username.strip():
+        return {"code": 3}
+    if not isinstance(game_id, int):
+        return {"code": 1}
+    game_entry = games.get(game_id)
+    if game_entry is None:
+        return {"code": 1}
+    game = game_entry["game"]
+    player_list = game.player_list
 
+    caller_seat = None
+    for i, player in enumerate(player_list):
+        if player.name == username:
+            caller_seat = i 
+            break
+    if caller_seat is None:
+        return {"code": 1}
+    
+    seat_changes = event.get("seat")
+    if seat_changes is not None:
+        if not isinstance(seat_changes, dict):
+            return {"code": 2}
+        for seat_key, seat_name in seat_changes.items():
+            # Keys come in as strings from JSON, convert to int
+            try:
+                seat_idx = int(seat_key)
+            except (ValueError, TypeError):
+                return {"code": 2}
+            if not (0 <= seat_idx <= 5):
+                return {"code": 2}
+            if not isinstance(seat_name, str):
+                return {"code": 2}
+            player_list[seat_idx] = Player(name=seat_name.strip(), is_bot=False)
+ 
+    # Apply has_started if provided
+    has_started = event.get("has_started")
+    if has_started is not None:
+        if not isinstance(has_started, bool):
+            return {"code": 2}
+        game_entry["has_started"] = has_started
+ 
+    # Build game_settings broadcast payload
+    seats = {i: player_list[i].name for i in range(6)}
+    broadcast = {
+        "type": "game_settings",
+        "id": event.get("id", 0),
+        "seat": seats,
+        "has_started": game_entry["has_started"],
+    }
+ 
+    # Broadcast to all websockets connected to this game
+    websockets_in_game = connections.get(game_id, set())
+    if websockets_in_game:
+        await asyncio.gather(
+            *[ws.send(__import__('json').dumps(broadcast)) for ws in websockets_in_game],
+            return_exceptions=True,
+        )
+ 
+    return {"code": 0}
+
+
+#Gharret: 
 def move(event):
-    pass
+    username = event.get("name")
+    game_id = event.get("game_id")
 
+    if not isinstance(username, str) or not username.strip():
+        return {"code": 3}
+    if not isinstance(game_id, int):
+        return {"code": 1}
+
+    game_entry = games.get(game_id)
+    if game_entry is None:
+        return {"code": 1}
+    game = game_entry["game"]
+
+    caller_seat = None
+    for i, player in enumerate(game.player_list):
+        if player.name == username:
+            caller_seat = i
+            break
+    if caller_seat is None:
+        return {"code": 1}
+    
+    if game.turn != caller_seat:
+        return {"code": 8}  #NOT YOUR TURN 
+    resign = event.get("resign", False)
+    if resign:
+        game.eliminate_player(username)
+        return {"code": 0}
+    start = event.get("start")
+    end = event.get("end")
+    if not isinstance(start, int) or not isinstance(end, int):
+        return {"code": 2}
+
+    if start not in game.pieces[caller_seat]:
+        return {"code": 7}  
+    game.make_move(start, end)
+    return {"code": 0}
+    
 
 # SERVER MESSAGES
 def game_state():
